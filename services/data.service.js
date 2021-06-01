@@ -1,4 +1,5 @@
-let currentUser;
+const db=require('./db');
+//let currentUser;
 
 let accountDetails = {
   1000: { acno: 1000, username: "userone", password: "userone", balance: 50000 },
@@ -8,69 +9,60 @@ let accountDetails = {
 }
 
 
-const register = (uname, acno, pswd) => {
+const register = (uname, acno, pswd) => { 
 
-  let user = accountDetails;
-
-  if (acno in user) {
-    // alert("User Exist.. Please Login");
-    return {
-      statusCode: 422,
-      status: false,
-      message: "User Exist.. Please Login"
-    }
+return db.User.findOne({acno}) 
+.then(user=>{
+  // console.log(user);
+  if(user){ 
+  return {
+    statusCode: 422,
+    status: false,
+    message: "User Exist.. Please Login"
   }
-  else {
-    user[acno] = {
-      acno,
-      username: uname,
-      password: pswd,
-      balance: 0
-    }
-    //   alert("Succesfully Registerd");
-    return {
-      statusCode: 200,
-      status: true,
-      message: "Succesfully Registerd"
-    }
+}
+else{
+  const newUser=new db.User({
+    acno,
+    username:uname,
+    password:pswd,
+    balance:0
+  })
+   newUser.save();
+   return {
+    statusCode: 200,
+    status: true,
+    message: "Succesfully Registerd"
   }
-
+}
+})
 }
 
 
 
-const login = (req,acno, pswd) => {
-  let user = accountDetails;
-
-  if (acno in user) {
-    if (pswd == user[acno]["password"]) {
-      req.session.currentUser = user[acno]
+const login = (req,acno,password) => {
+  var acno=parseInt(acno);
+  console.log(acno)
+  return db.User.findOne({acno,password}) 
+  .then(user=>{
+    console.log(user)
+    if(user){
+      req.session.currentUser = user;
       return {
         statusCode: 200,
         status: true,
         message: "Succesfully Loged-In"
       }
     }
-    else {
+    else{ 
       return {
-        statusCode: 422,
-        status: false,
-        message: "Inncorrect Password"
-      }
-    }
-
-  }
-  else {
-    return {
       statusCode: 422,
       status: false,
-      message: "Invalid Account"
+      message: "Invalid Credentials"
     }
-  }
+    }
+  })
 }
-
-
-
 
 
 
